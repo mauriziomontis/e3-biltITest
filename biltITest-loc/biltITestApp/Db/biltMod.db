@@ -1,0 +1,198 @@
+#
+#  The program is free software: you can redistribute
+#  it and/or modify it under the terms of the GNU General Public License
+#  as published by the Free Software Foundation, either version 2 of the
+#  License, or any newer version.
+#
+#  This program is distributed in the hope that it will be useful, but WITHOUT
+#  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+#  more details.
+#
+#  You should have received a copy of the GNU General Public License along with
+#  this program. If not, see https://www.gnu.org/licenses/gpl-2.0.txt
+#
+#
+#  Original db author : Pete Owens (Science and Tecnology Facility Council UK) 
+#  INFN-LNL specific author : Mauro Giacchini
+#                    email  : mauro.giacchini@lnl.infn.it
+#
+#
+################################################################################
+# Database for iTest - Bilt System Controller -- Common Parameters
+#
+# Mauro Giacchini - 2019-07-02
+#
+# Macro:
+#
+# DEVICENAME    - Device name
+# ASYNPORT      - Asyn PORT
+# AREASTRUCTURE - Areastructure (as defined on ESS CCDB)
+# MODULE        - 1...7 (each power supply could be equipped with several modules)
+# MAXCURRENT	- Maximum current
+# MAXVOLTAGE	- Maximum voltage
+#
+################################################################################
+
+record (stringout, "$(AREASTRUCTURE):$(DEVICENAME):Debug")
+{
+    field (DESC, "DEBUG COMMUNICATION RECORD")
+    field (DTYP, "stream")
+    field (OUT,  "@biltMod.proto debug() $(ASYNPORT)")
+    field (SCAN,  "Passive")
+}
+
+########## COMMON ###############################################################
+
+record (stringin, "$(AREASTRUCTURE):$(DEVICENAME):ModName")
+{
+    field (DESC, "GET MODULE NAME")
+    field (DTYP, "stream")
+    field (INP,  "@biltMod.proto getName($(MODULE)) $(ASYNPORT)")
+    field (SCAN, "10 second")
+}
+
+record (mbbi, "$(AREASTRUCTURE):$(DEVICENAME):En")
+{
+    field (DESC, "GET SUPPLY STATUS OF MODULE $(MODULE)")
+    field (DTYP, "stream")
+    field (PINI, "YES")
+    field (INP,  "@biltMod.proto getState($(MODULE)) $(ASYNPORT)")
+    field (SCAN, "1 second")
+    field (ZRST, "Off")
+    field (ONST, "On")
+    field (TWST, "Warning")
+    field (THST, "Alarm")
+    field (TWSV, "MINOR")
+    field (THSV, "MAJOR")
+}
+
+record (bo, "$(AREASTRUCTURE):$(DEVICENAME):Clr")
+{
+    field (DESC, "CLEAR STATE OF MODULE $(MODULE)")
+    field (DTYP, "stream")
+    field (OUT,  "@biltMod.proto setClear($(MODULE)) $(ASYNPORT)")
+    field (ZNAM, "Clear")
+    field (FLNK, "$(AREASTRUCTURE):$(DEVICENAME):ClrRset")
+}
+
+record (seq, "$(AREASTRUCTURE):$(DEVICENAME):ClrRset")
+{
+    field (DESC, "RESET SETPOINT AND ENABLE")
+    field (DO1, "0")
+    field (LNK1, "$(AREASTRUCTURE):$(DEVICENAME):EnCmd")
+    field (DO2, "0")
+    field (LNK2, "$(AREASTRUCTURE):$(DEVICENAME):CurSet")
+    field (DO3, "1")
+    field (DLY3, "1.0")
+    field (LNK3, "$(AREASTRUCTURE):$(DEVICENAME):EnCmd.PROC")
+    field (DO4, "1")
+    field (DLY4, "1.0")
+    field (LNK4, "$(AREASTRUCTURE):$(DEVICENAME):CurSet.PROC")
+}
+
+
+record (bo, "$(AREASTRUCTURE):$(DEVICENAME):EnCmd")
+{
+    field (DESC, "SET STATUS OF MODULE $(MODULE)")
+    field (DTYP, "stream")
+    field (OUT,  "@biltMod.proto setState($(MODULE)) $(ASYNPORT)")
+    field (ZNAM, "Off")
+    field (ONAM, "On")
+}
+
+
+################################################################################
+
+record (ao, "$(AREASTRUCTURE):$(DEVICENAME):CurSet")
+{
+    field (DESC, "SET CURRENT OF MODULE $(MODULE)")
+    field (DTYP, "stream")
+    field (OUT,  "@biltMod.proto setCurr($(MODULE)) $(ASYNPORT)")
+    field (EGU,  "A")
+    field (PREC, "5")
+    field (DRVL, "-$(MAXCURRENT)")
+    field (DRVH, "$(MAXCURRENT)")
+    field (LOPR, "-$(MAXCURRENT)")
+    field (HOPR, "$(MAXCURRENT)")
+}
+
+record (ai, "$(AREASTRUCTURE):$(DEVICENAME):CurSet-RB")
+{
+    field (DESC, "READ CURRENT SETUP OF MODULE $(MODULE)")
+    field (DTYP, "stream")
+    field (INP,  "@biltMod.proto getSetCurr($(MODULE)) $(ASYNPORT)")
+    field (SCAN, "1 second")
+    field (EGU,  "A")
+    field (PREC, "5")
+    field (LOPR, "-$(MAXCURRENT)")
+    field (HOPR, "$(MAXCURRENT)")
+    field (LOW,  "-$(MAXCURRENT)")
+    field (HIGH, "$(MAXCURRENT)")
+    field (LOLO, "-$(MAXCURRENT)")
+    field (HIHI, "$(MAXCURRENT)")
+    field (LSV,  "MINOR")
+    field (HSV,  "MINOR")
+    field (LLSV, "MAJOR")
+    field (HHSV, "MAJOR")
+}
+
+record (ai, "$(AREASTRUCTURE):$(DEVICENAME):Cur")
+{
+    field (DESC, "READ CURRENT ON MODULE $(MODULE)")
+    field (DTYP, "stream")
+    field (INP,  "@biltMod.proto getCurr($(MODULE)) $(ASYNPORT)")
+    field (SCAN, "1 second")
+    field (EGU,  "A")
+    field (PREC, "5")
+    field (LOPR, "-$(MAXCURRENT)")
+    field (HOPR, "$(MAXCURRENT)")
+    field (LOW,  "-$(MAXCURRENT)")
+    field (HIGH, "$(MAXCURRENT)")
+    field (LOLO, "-$(MAXCURRENT)")
+    field (HIHI, "$(MAXCURRENT)")
+    field (LSV,  "MINOR")
+    field (HSV,  "MINOR")
+    field (LLSV, "MAJOR")
+    field (HHSV, "MAJOR")
+}
+
+
+record (ai, "$(AREASTRUCTURE):$(DEVICENAME):Vol")
+{
+    field (DESC, "READ CURRENT VOLTAGE ON MODULE $(MODULE)")
+    field (DTYP, "stream")
+    field (INP,  "@biltMod.proto getVolt($(MODULE)) $(ASYNPORT)")
+    field (SCAN, "1 second")
+    field (EGU,  "V")
+    field (PREC, "5")
+    field (LOPR, "-$(MAXVOLTAGE)")
+    field (HOPR, "$(MAXVOLTAGE)")
+    field (LOW,  "-$(MAXVOLTAGE)")
+    field (HIGH, "$(MAXVOLTAGE)")
+    field (LOLO, "-$(MAXVOLTAGE)")
+    field (HIHI, "$(MAXVOLTAGE)")
+    field (LSV,  "MINOR")
+    field (HSV,  "MINOR")
+    field (LLSV, "MAJOR")
+    field (HHSV, "MAJOR")
+}
+
+################################################################################
+# MISCELLANEUS 
+#
+
+record (stringout, "$(AREASTRUCTURE):$(DEVICENAME):Dev")
+{
+    field (DESC, "DEVICE/PS RELATED TO MODULE $(MODULE)")
+    field (PINI, "YES")
+    field (VAL, "$(DEVICE)")
+}
+
+
+record (ao, "$(AREASTRUCTURE):$(DEVICENAME):ModCh")
+{
+    field (DESC, "INDICATE MODULE CHANNEL $(MODULE)")
+    field (PINI, "YES")
+    field (VAL, "$(MODULE)")
+}
